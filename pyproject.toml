@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "0.108.0"
+uvicorn = "^0.29.0"
+pydantic = {extras = ["email"], version = "^2.6.0"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+sqlalchemy-utils = "^0.41.1"
+sqlalchemy = {version = "^2.0.25", extras = ["asyncio"]}
+psycopg2-binary = "^2.9.9"
+python-dotenv = "^1.0.1"
+alembic = "^1.13.1"
+requests = "^2.32.3"
+mrjob = "^0.7.4"
+cassandra-driver = "^3.29.1"
+uuid = "^1.30"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
