@@ -1,0 +1,115 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres
+    container_name: postgresdb
+    restart: always
+    networks:
+      - hadoop
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    networks:
+      - hadoop
+
+  app:
+    build: .
+    container_name: app
+    restart: always
+    networks:
+      - hadoop
+    volumes:
+      - ./app:/code/app/
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    user: "root"
+    environment:
+      - CLUSTER_NAME=test
+    volumes:
+      - namenode-data:/hadoop/dfs/name
+      - ./app/static:/home
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+    networks:
+      - hadoop
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    user: "root"
+    volumes:
+      - datanode-data:/hadoop/dfs/data
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    networks:
+      - hadoop
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    user: "root"
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+      - datanode
+    ports:
+      - "8088:8088"
+    networks:
+      - hadoop
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    ports:
+      - "8188:8188"
+    networks:
+      - hadoop
+    restart: always
+    env_file:
+      - ./hadoop.env
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    user: "root"
+    environment:
+      - YARN_CONF_yarn_nodemanager_hostname=nodemanager
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - resourcemanager
+    ports:
+      - "8042:8042"
+    networks:
+      - hadoop
+
+volumes:
+  namenode-data:
+  datanode-data:
+
+networks:
+  hadoop:
