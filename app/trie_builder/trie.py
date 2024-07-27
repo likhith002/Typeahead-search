@@ -59,6 +59,20 @@ class Trie:
         get_words(root, prefix, "")
         return words
 
+    def compress_paths(self, node: TrieNode):
+        if len(node.children) == 1 and not node.eow:
+            char = next(iter(node.children))
+            child = node.children[char]
+            node.children.clear()
+            node.children[char] = child
+            self._compress_recursive(child)
+        else:
+            for child in node.children.values():
+                self._compress_recursive(child)
+
+    def compress(self):
+        self.compress_paths()
+
     def serach(self, word: str) -> List[str | None]:
         word = word.lower()
         root = self.get_root()
@@ -68,6 +82,8 @@ class Trie:
             if char in root.children:
                 prefix += char
                 root = root.children[char]
+            else:
+                return []
         if HEAD_ROOT == root:
             return []
 
@@ -98,4 +114,4 @@ def initialize_trie() -> Tuple[Trie, TrieNode]:
 #     for word in test_words:
 #         trie.insert(word)
 
-#     print(trie.serach("uni"))
+#     print(trie.serach("univv"))
