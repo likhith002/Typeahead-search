@@ -1,32 +1,34 @@
-from fastapi import FastAPI, Depends
+import traceback, asyncio
+from fastapi import FastAPI, BackgroundTasks
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
-import traceback
 from fastapi.middleware.gzip import GZipMiddleware
-from sqlalchemy.ext.declarative import declarative_base
 from app.routes.main import users_router
 from app.routes.cassandra import cassandra_router
 from app.routes.trie import trie_router
 from app.trie_builder.update_trie import update_trie
 from cassandra.cluster import Session
 from app.cassandra_utils.connection import get_session_cassandra
+from app.cassandra_utils.create_table import create_keyspace_and_table
 from app.schemas.response import CustomException
-
-# from app.database.database import engine
-# from app.models import user
-
-# user.Base.metadata.create_all(bind=engine)
+from app.rabbitmq.connection import RabbitMQ
+from app.rabbitmq.handler_ps import consume_message
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     session: Session = get_session_cassandra()
     await update_trie(session)
+    await RabbitMQ.get_connection()
+    # await start_consuming()
+    asyncio.create_task(consume_message())
     yield
+    await RabbitMQ.close()
     print("Shuting down Application!!!")
 
 
+create_keyspace_and_table()
 app = FastAPI(
     docs_url="/app/docs",
     #   responses={
