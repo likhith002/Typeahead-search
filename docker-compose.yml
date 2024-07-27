@@ -106,10 +106,24 @@ services:
       - "8042:8042"
     networks:
       - hadoop
+  rabbitmq:
+    image: rabbitmq:3.9.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # RabbitMQ Management UI
+    networks:
+      - hadoop
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER} # RabbitMQ default username
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS} # RabbitMQ default password
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq # Persist RabbitMQ data
 
 volumes:
   namenode-data:
   datanode-data:
+  rabbitmq-data:
 
 networks:
   hadoop:
